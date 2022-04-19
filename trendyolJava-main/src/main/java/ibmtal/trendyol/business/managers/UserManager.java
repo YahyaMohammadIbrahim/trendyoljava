@@ -8,7 +8,8 @@ import ibmtal.trendyol.business.services.UserService;
 import ibmtal.trendyol.core.result.Result;
 import ibmtal.trendyol.core.result.ResultItem;
 import ibmtal.trendyol.database.UserDao;
-
+import ibmtal.trendyol.dto.CompanyAddDto;
+import ibmtal.trendyol.dto.LoginDto;
 import ibmtal.trendyol.dto.UserAddDto;
 import ibmtal.trendyol.entity.User;
 
@@ -33,6 +34,8 @@ public class UserManager implements UserService {
 			result.getErrors().add(
 			 new ResultItem("username", "Kullanıcı adı boş geçilemez")
 			);
+			
+			
 		}
 		if(user.getPassword().isBlank()==true) {
 			result.setSuccess(false);
@@ -52,6 +55,16 @@ public class UserManager implements UserService {
 			result.getErrors().add(
 			 new ResultItem("email", "Mail Adresi boş geçilemez")
 			);
+			
+			if(user.getName().isBlank()==true) {
+				result.setSuccess(false);
+				result.getErrors().add(new ResultItem("name","Adı boş geçilemez"));
+			}
+			if(user.getSurname().isBlank()==true) {
+				result.setSuccess(false);
+				result.getErrors().add(new ResultItem("surname","Soyadı boş geçilemez"));
+			}
+			
 		}
 		if(result.getSuccess()!=false) {
 			this.userDao.save(user);
@@ -103,9 +116,14 @@ public class UserManager implements UserService {
 			result.getErrors().add(new ResultItem("rePassword","Şifreler uyuşmuyur"));			
 			
 		}
-		if(userAddDto.getEmail().isBlank()==true) {
+
+		if(userAddDto.getName().isBlank()==true) {
 			result.setSuccess(false);
-			result.getErrors().add(new ResultItem("email","Email boş geçilemez"));
+			result.getErrors().add(new ResultItem("name","Adı boş geçilemez"));
+		}
+		if(userAddDto.getSurname().isBlank()==true) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("surname","Soyadı boş geçilemez"));
 		}
 		if(result.getSuccess()==true) {
 			User user=new User();
@@ -122,6 +140,93 @@ public class UserManager implements UserService {
 			ArrayList<User> userlist=new ArrayList<User>();
 			userlist.add(user);
 			result.setData(userlist);
+		}
+		return result;
+	}
+	@Override
+	public Result<User> addCompanyDto(CompanyAddDto companyAddDto) {
+		Result<User> result=new Result<User>();
+		if(companyAddDto.getUsername().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("username","Kullanıcı adı  boş geçilemez"));
+		}
+		else if(this.userDao.getByUsername(companyAddDto.getUsername()).isEmpty()==false) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("username","Kullanıcı adı  sistemde kayıtlı"));
+			
+			
+		}
+		if(companyAddDto.getPassword().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("password","Şifre boş geçilemez"));
+		}
+		else if(companyAddDto.getPassword().length()<8 ) {
+			result.getErrors().add(new ResultItem("password","şifre en az 8 karakter olmalı"));
+			
+		}
+		if(companyAddDto.getRePassword().equals(companyAddDto.getPassword())==false) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("rePassword","Şifreler uyuşmuyur"));	
+			
+			
+		}
+		if(companyAddDto.getEmail().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("email","email boş geçilemez"));
+		}
+		if(companyAddDto.getPhone().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("phone","phone boş geçilemez"));
+		}
+		
+		if(this.userDao.getByName(companyAddDto.getCompanyName()).isEmpty()==false) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("companyName","Şirket adı sistemde kayıtlı"));
+
+			
+		}
+		if(companyAddDto.getRePassword().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("rePassword","reşifre boş geçilemez"));
+		}
+		if(companyAddDto.getCompanyName().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("companyName","Şirket boş geçilemez"));
+			
+		}
+		if(companyAddDto.getAdress().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("adress","adress bilgisi girmediniz"));
+		}
+		if(result.getSuccess()==true) {
+			User user=new User();
+			user.setUsername(companyAddDto.getUsername());
+			user.setPassword(companyAddDto.getPassword());
+			user.setName(companyAddDto.getCompanyName());
+			user.setPhone(companyAddDto.getPhone());
+			user.setEmail(companyAddDto.getEmail());
+			user.setUsertype("company");
+			user.setAdress(companyAddDto.getAdress());
+			user.setWebsite(companyAddDto.getWebsite());
+			this.userDao.save(user);
+		}
+		return result;
+	}
+	@Override
+	public Result<User> login(LoginDto loginDto) {
+		Result<User> result=new Result<User>();
+	User loginUser=new User();
+	loginUser=this.userDao.findByUsername(loginDto.getUsername());
+		if(loginUser.getUsername().isBlank()) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("username","Kullanıcı adı hatalı"));
+		}
+		else if(loginDto.getPassword().equals(loginUser.getPassword())==false) {
+			result.setSuccess(false);
+			result.getErrors().add(new ResultItem("password","Şifre Hatalı"));
+		}
+		if(result.getSuccess()==true) {
+			
 		}
 		return result;
 	}
